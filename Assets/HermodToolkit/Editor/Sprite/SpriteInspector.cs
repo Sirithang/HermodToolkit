@@ -6,14 +6,55 @@ using System.Collections;
 public class SpriteInspector : Editor 
 {
     bool _previewShowned = false;
+    TextureRegionSelector _selector;
 
+    //-----------------------
 
-    void OnEnable()
+    public virtual void OnSceneGUI()
+    {
+        Event e = Event.current;
+
+        Sprite spr = target as Sprite;
+
+        if (e.type == EventType.MouseDrag)
+        {
+            if (e.modifiers == EventModifiers.Control)
+            {
+                Vector3 worldMouse = Sceneview2D.current.camera.ScreenToWorldPoint(new Vector3(e.mousePosition.x, Sceneview2D.current.position.height - Sceneview2D.kToolbarHeight - e.mousePosition.y, 1));
+
+                Tilemap[] tl = Tilemap.FindObjectsOfType(typeof(Tilemap)) as Tilemap[];
+                if (tl == null)
+                    return;
+
+                Vector3 forcedPosition = spr.pos;
+
+                foreach (Tilemap t in tl)
+                {
+                    Vector2 pos = t.FindCaseAt(worldMouse);
+                    if (pos.x >= 0 && pos.y >= 0 && pos.x < t.width && pos.y < t.height)
+                    {
+                        forcedPosition = t.PositionOfCase((int)pos.x, (int)pos.y);
+                    }
+                }
+                
+
+                spr.transform.position = new Vector3(forcedPosition.x, forcedPosition.y, spr.transform.position.z);
+
+                e.Use();
+            }
+
+        }
+
+        spr.pos = spr.transform.position;
+        spr.RoundPosition();
+    }
+
+    public virtual void OnEnable()
     {
 
     }
 
-    void OnDisable()
+    public virtual void OnDisable()
     {
 
     }
@@ -29,7 +70,20 @@ public class SpriteInspector : Editor
         Sprite spr = target as Sprite;
 
         spr.spriteSheet = EditorGUILayout.ObjectField("SpriteSheet", spr.spriteSheet, typeof(Texture2D), true) as Texture2D;
-        spr.rect = EditorGUILayout.RectField("Sprite Rectangle" , spr.rect);
+        Rect re = EditorGUILayout.RectField("Sprite Rectangle" , spr.rect);
+
+        if (re != spr.rect)
+        {
+            spr.rect = re;
+
+            if (_selector)
+            {
+                _selector._currentSelection.x = re.x;
+                _selector._currentSelection.y = spr.spriteSheet.height - (re.y + re.height);
+                _selector._currentSelection.width = re.width;
+                _selector._currentSelection.height = re.height;
+            }
+        }
 
         spr.rect.x = Mathf.RoundToInt(spr.rect.x);
         spr.rect.y = Mathf.RoundToInt(spr.rect.y);
@@ -40,6 +94,20 @@ public class SpriteInspector : Editor
         if (GUILayout.Button("Make Sprite", GUILayout.MinHeight(40)) && spr.spriteSheet != null)
         {
             spr.RecreateSprite();
+        }
+        if (GUILayout.Button("Pick Rect", GUILayout.MinHeight(40)) && spr.spriteSheet != null)
+        {
+            if (_selector == null)
+            {
+                _selector = EditorWindow.GetWindow<TextureRegionSelector>();
+                _selector._target = spr.spriteSheet;
+                _selector._owner = this;
+                _selector._currentSelection.x = re.x;
+                _selector._currentSelection.y = spr.spriteSheet.height - (re.y + re.height);
+                _selector._currentSelection.width = re.width;
+                _selector._currentSelection.height = re.height;
+                _selector.Show();
+            }
         }
         GUILayout.EndHorizontal();
 
@@ -59,6 +127,20 @@ public class SpriteInspector : Editor
             GUILayout.Box("");
             GUI.DrawTextureWithTexCoords(new Rect(r.x + r.width * 0.5f - spr.rect.width * 0.5f, r.y, spr.rect.width, spr.rect.height), spr.spriteSheet, normalizedRect);
             EditorGUILayout.EndHorizontal();
+        }
+
+
+        if (_selector && _selector.isOpen)
+        {
+            float xMin = _selector._currentSelection.xMin;
+            float xMax = _selector._currentSelection.xMax;
+            float yMin = spr.spriteSheet.height - _selector._currentSelection.yMax;
+            float yMax = spr.spriteSheet.height - _selector._currentSelection.yMin;
+
+            spr.rect.x = xMin;
+            spr.rect.y = yMin;
+            spr.rect.width = xMax - xMin;
+            spr.rect.height = yMax - yMin;
         }
     }
 
@@ -105,7 +187,7 @@ public class SpriteInspector : Editor
 
         // ----- texture creation
 
-        Texture2D texture = new Texture2D((int)spr.rect.width, (int)spr.rect.height);
+        Texture2D texture = new Texture2D(Mathf.Max((int)spr.rect.width, 2), Mathf.Max((int)spr.rect.height, 2));
         texture.filterMode = FilterMode.Point;
 
         for (int i = 0; i < texture.width; ++i)

@@ -4,6 +4,9 @@ using System.Collections;
 
 public class Sceneview2D : SceneView
 {
+    static protected Sceneview2D _current;
+    static public Sceneview2D current { get { return _current; } }
+
     protected float _zoom = 1.0f;
     protected bool _lockedSelection = false;
 
@@ -34,12 +37,13 @@ public class Sceneview2D : SceneView
     public override void OnEnable()
     {
         base.OnEnable();
+        _current = this;
         onSceneGUIDelegate += SceneFunc;
     }
 
     public override void OnDisable()
     {
-        base.OnDisable();
+        //base.OnDisable();
         onSceneGUIDelegate -= SceneFunc;
     }
 

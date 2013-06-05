@@ -6,7 +6,6 @@ public class TilemapEditor :  EditorWindow
 {
     public Tilemap editedTilemap;
 
-    int selectedTileSprite;
     Texture2D texture;
 
     protected Vector2 _clickPos;
@@ -41,7 +40,6 @@ public class TilemapEditor :  EditorWindow
     {
         SceneView.onSceneGUIDelegate += SceneBypass;
         Tools.current = Tool.None;
-        selectedTileSprite = 0;
 
         texture = new Texture2D(16, 16);
         texture.filterMode = FilterMode.Point;

@@ -3,9 +3,16 @@ using System.Collections;
 
 public class Sprite : MonoBehaviour 
 {
+    public Vector3 pos;
+
     public Texture2D spriteSheet;
 
     public Rect rect = new Rect(0,0, 32, 32);
+
+    protected virtual void Awake()
+    {
+        pos = transform.position;
+    }
 
 	// Use this for initialization
     [ContextMenu("Do Start")]
@@ -21,7 +28,15 @@ public class Sprite : MonoBehaviour
         MaterialDatabase.Unload(spriteSheet);
     }
 
-    
+    protected virtual void Update()
+    {
+        RoundPosition();
+    }
+
+    public void RoundPosition()
+    {
+        transform.position = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), transform.position.z);
+    }
 
     //=========================
 
@@ -33,7 +48,7 @@ public class Sprite : MonoBehaviour
         Vector2[] uv = new Vector2[4];
 
         int[] offsetsX = { 0, 0, 1, 1 };
-        int[] offsetsY = { 0, 1, 1, 0 };
+        int[] offsetsY = { 1, 0, 0, 1 };
 
         float normalizedX = rect.x / spriteSheet.width;
         float normalizedY = rect.y / spriteSheet.height;
@@ -58,15 +73,12 @@ public class Sprite : MonoBehaviour
             mf = gameObject.AddComponent<MeshFilter>();
         }
 
-        if (mf.sharedMesh == null)
-        {
-            mf.sharedMesh = new Mesh();
-        }
+        mf.sharedMesh = new Mesh();
 
         mf.sharedMesh.vertices = pos;
         mf.sharedMesh.normals = norm;
         mf.sharedMesh.uv = uv;
-        mf.sharedMesh.triangles = new int[]{0,1,3, 1,2,3};
+        mf.sharedMesh.triangles = new int[]{0,3,1, 1,3,2};
 
         mf.sharedMesh.RecalculateBounds();
 
@@ -74,9 +86,13 @@ public class Sprite : MonoBehaviour
         if (mr == null)
         {
             mr = gameObject.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);
         }
 
-
-        mr.material = MaterialDatabase.Get(spriteSheet);
+        if (mr.sharedMaterial.mainTexture != spriteSheet)
+        {
+            MaterialDatabase.Unload(mr.sharedMaterial.mainTexture as Texture2D);
+            mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);
+        }
     }
 }

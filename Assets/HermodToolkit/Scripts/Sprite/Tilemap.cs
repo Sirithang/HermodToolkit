@@ -54,6 +54,25 @@ public class Tilemap : MonoBehaviour
         MakeTilemap();
     }
 
+    //-----------
+
+    public Vector2 FindCaseAt(Vector3 position)
+    {
+        Vector3 localPos = position - (renderer.bounds.min);
+
+        int x = (int)(localPos.x / tileSize);
+        int y = (int)(localPos.y / tileSize);
+
+        return new Vector2(x, y);
+    }
+
+    //----------------------
+
+    public Vector3 PositionOfCase(int x, int y)
+    {
+        return new Vector3(renderer.bounds.min.x + tileSize * x, renderer.bounds.min.y + tileSize * y, transform.position.z);
+    }
+
     //----------
 
     public void FloodFill(int x, int y, int val)
