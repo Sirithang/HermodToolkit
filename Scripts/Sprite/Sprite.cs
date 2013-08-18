@@ -30,7 +30,7 @@ public class Sprite : MonoBehaviour
 
     protected virtual void Update()
     {
-        RoundPosition();
+        //RoundPosition();
     }
 
     public void RoundPosition()
@@ -73,6 +73,7 @@ public class Sprite : MonoBehaviour
             mf = gameObject.AddComponent<MeshFilter>();
         }
 
+        DestroyImmediate(mf.sharedMesh);
         mf.sharedMesh = new Mesh();
 
         mf.sharedMesh.vertices = pos;
@@ -94,5 +95,15 @@ public class Sprite : MonoBehaviour
             MaterialDatabase.Unload(mr.sharedMaterial.mainTexture as Texture2D);
             mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);
         }
+    }
+
+    //-----------------------------------------------
+
+    public bool ScreenRectContains(Vector3 position)
+    {
+        Vector3 ScreenPos = Camera.main.WorldToScreenPoint(transform.position);
+        Rect screenRect = new Rect(ScreenPos.x, ScreenPos.y, rect.width, rect.height);
+
+        return screenRect.Contains(position);
     }
 }

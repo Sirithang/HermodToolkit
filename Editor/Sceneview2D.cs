@@ -76,7 +76,7 @@ public class Sceneview2D : SceneView
         pivot = camera.transform.position - Vector3.forward;
         this.size = 20.0f;
 
-        camera.projectionMatrix = Matrix4x4.Ortho(-position.width * 0.5f * _zoom, position.width * 0.5f * _zoom, -position.height * 0.5f * _zoom, position.height * 0.5f * _zoom, 0.01f, 50.0f);
+        camera.projectionMatrix = Matrix4x4.Ortho(-position.width * 0.5f * _zoom, position.width * 0.5f * _zoom, -position.height * 0.5f * _zoom, position.height * 0.5f * _zoom, 0.01f, 100.0f);
     }
 
     static void SceneFunc(SceneView p_scn)

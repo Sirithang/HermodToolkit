@@ -3,8 +3,8 @@ Shader "Jormungandr/SimplestCutout" {
 		_MainTex ("Base (RGB)", 2D) = "white" {}
 	}
 	SubShader {
-		Tags { "Queue"="Geometry" }
-		AlphaTest Greater 0.5
+		Tags { "Queue" = "Transparent"}
+		Blend SrcAlpha OneMinusSrcAlpha
 		LOD 200
 		
 		Pass

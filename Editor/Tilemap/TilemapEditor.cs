@@ -10,6 +10,7 @@ public class TilemapEditor :  EditorWindow
 
     protected Vector2 _clickPos;
     protected bool _inDrag = false;
+    protected bool _currentSwitch = false; // for the collision switcher, to avoid flickering
 
     protected struct TileSelection
     {
@@ -28,10 +29,11 @@ public class TilemapEditor :  EditorWindow
         PENCIL,
         BUCKET,
         ERASER,
+        COLLISION_SWITCHER,
         MAX_PAINTTOOL
     }
 
-    protected string[] paintToolNames = {"Pencil", "Bucket", "Eraser"};
+    protected string[] paintToolNames = {"Pencil", "Bucket", "Eraser", "Collision Switcher"};
     protected PaintTool _currentPaintTool = PaintTool.PENCIL;
 
     //***
@@ -93,8 +95,12 @@ public class TilemapEditor :  EditorWindow
             if (e.button == 0)
             {
                 _clickPos = e.mousePosition;
-                _currentSelection = new TileSelection();
-                _inDrag = true;
+
+                if (_clickPos.y <= editedTilemap.spriteSheet.height)
+                {
+                    _currentSelection = new TileSelection();
+                    _inDrag = true;
+                }
             }
         }
         else if (Event.current.type == EventType.mouseUp)
@@ -141,6 +147,12 @@ public class TilemapEditor :  EditorWindow
         //---------------------------------
 
        _currentPaintTool = (PaintTool)GUI.SelectionGrid(new Rect(0, editedTilemap.spriteSheet.height, position.width, 50), (int)_currentPaintTool, paintToolNames, (int)PaintTool.MAX_PAINTTOOL);
+
+       if (_currentSelection.array != null)
+       {
+           GUI.Label(new Rect(0, editedTilemap.spriteSheet.height + 50, position.width, 20), "Current Tile selected : " + _currentSelection.array[0, 0] +
+                              " to " + _currentSelection.array[_currentSelection.width - 1, _currentSelection.height - 1]);
+       }
     }
 
     void SceneBypass(SceneView p_scn)
@@ -152,8 +164,8 @@ public class TilemapEditor :  EditorWindow
         if (scn == null)
             return;
 
-        minSize = new Vector2(editedTilemap.spriteSheet.width-1, editedTilemap.spriteSheet.height + 49);
-        maxSize = new Vector2(editedTilemap.spriteSheet.width, editedTilemap.spriteSheet.height + 50);
+        minSize = new Vector2(editedTilemap.spriteSheet.width-1, editedTilemap.spriteSheet.height + 69);
+        maxSize = new Vector2(editedTilemap.spriteSheet.width, editedTilemap.spriteSheet.height + 70);
 
         HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
 
@@ -165,11 +177,11 @@ public class TilemapEditor :  EditorWindow
         int x = (int)(localPos.x / editedTilemap.tileSize);
         int y = (int)(localPos.y / editedTilemap.tileSize);
 
-        if (e.type == EventType.MouseMove)
+        if (e.type == EventType.MouseDown)
         {
-            if (_currentPaintTool == PaintTool.PENCIL)
+            if (_currentPaintTool == PaintTool.COLLISION_SWITCHER)
             {
-               
+                _currentSwitch = editedTilemap.IsPassable(x, y);
             }
         }
         else if (e.type == EventType.MouseDrag || e.type == EventType.MouseUp)
@@ -197,19 +209,58 @@ public class TilemapEditor :  EditorWindow
                     if(_currentSelection.array.Length > 0)
                         editedTilemap.FloodFill(x, y, _currentSelection.array[0, 0]);
                 }
+                else if (_currentPaintTool == PaintTool.COLLISION_SWITCHER)
+                {
+                    editedTilemap.SetCollision(x, y, _currentSwitch);
+                }
 
                 editedTilemap.MakeTilemap();
             }
         }
 
-        Vector3[] vertex = new Vector3[]{
+
+        Vector3[] vertex = null;
+
+        if (_currentPaintTool == PaintTool.COLLISION_SWITCHER)
+        {
+
+            for (int i = 0; i < editedTilemap.width; ++i)
+            {
+                for (int j = 0; j < editedTilemap.height; ++j)
+                {
+                    if (!editedTilemap.IsPassable(i, j))
+                    {
+                        vertex = new Vector3[]{
+                            new Vector3(editedTilemap.renderer.bounds.min.x + i * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + j * editedTilemap.tileSize, 0),
+                            new Vector3(editedTilemap.renderer.bounds.min.x + i * editedTilemap.tileSize + editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + j * editedTilemap.tileSize, 0),
+                            new Vector3(editedTilemap.renderer.bounds.min.x + i * editedTilemap.tileSize + editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + j * editedTilemap.tileSize + editedTilemap.tileSize, 0),
+                            new Vector3(editedTilemap.renderer.bounds.min.x + i * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + j * editedTilemap.tileSize +  editedTilemap.tileSize, 0)};
+
+                        Handles.DrawSolidRectangleWithOutline(vertex, new Color(0.5f, 0, 0, 0.5f), Color.red);
+                    }
+                }
+            }
+        }
+
+        if (_currentPaintTool == PaintTool.PENCIL)
+        {
+            vertex = new Vector3[]{
                     new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize, 0),
                     new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize + _currentSelection.width * editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize, 0),
                     new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize + _currentSelection.width * editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize + _currentSelection.height * editedTilemap.tileSize, 0),
                     new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize + _currentSelection.height * editedTilemap.tileSize, 0)};
+        }
+        else
+        {
+            vertex = new Vector3[]{
+                    new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize, 0),
+                    new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize + editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize, 0),
+                    new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize + editedTilemap.tileSize,editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize + editedTilemap.tileSize, 0),
+                    new Vector3(editedTilemap.renderer.bounds.min.x + x * editedTilemap.tileSize, editedTilemap.renderer.bounds.min.y + y * editedTilemap.tileSize +  editedTilemap.tileSize, 0)};
+        }
 
         Handles.color = Color.red;
-        Handles.DrawSolidRectangleWithOutline(vertex, new Color(0,0, 0.4f, 0.1f), Color.red);
+        Handles.DrawSolidRectangleWithOutline(vertex, new Color(0, 0, 0.4f, 0.1f), Color.red);
 
        scn.Repaint();
                                         
