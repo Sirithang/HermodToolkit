@@ -19,6 +19,7 @@ public class AnimatedSprite : Sprite
     public List<SpriteAnimation> spriteAnimListInternal { get { return _animationsInternals; } }
 
     public bool play = false;
+    public float playbackSpeed = 1.0f;
 
     public SpriteAnimation current { get { return _current; } }
 
@@ -48,10 +49,8 @@ public class AnimatedSprite : Sprite
     }
 
 
-    protected override void Update()
+    protected virtual void Update()
     {
-        base.Update();
-
 #if UNITY_EDITOR
         if((playInEditor||Application.isPlaying) && play)
 #else
@@ -62,7 +61,7 @@ public class AnimatedSprite : Sprite
                 return;
 
             changeFrame(_current.SampleAt(_currentTime));
-            _currentTime += Time.deltaTime;
+            _currentTime += Time.deltaTime * playbackSpeed;
         }
     }
 
@@ -114,7 +113,6 @@ public class AnimatedSprite : Sprite
 
         for (int i = 0; i < 4; ++i)
         {
-            //color[vertex] = new Color32(255, 255, 255, 255);
             uv[i].Set(normalizedX + offsetsX[i] * normalizedW, normalizedY + offsetsY[i] * normalizedH);
         }
 
@@ -133,6 +131,7 @@ public class AnimatedSprite : Sprite
             _current = anim;
             _currentFrame = _current.startFrame;
             _currentTime = 0;
+            changeFrame(_current.SampleAt(_currentTime));
         }
     }
 

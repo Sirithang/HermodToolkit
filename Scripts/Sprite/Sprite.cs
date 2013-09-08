@@ -1,41 +1,88 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Sprite : MonoBehaviour 
 {
+    static public List<Sprite> allSprite { get { return _allSprite; } }
+    static protected List<Sprite> _allSprite = new List<Sprite>();
+
     public Vector3 pos;
 
     public Texture2D spriteSheet;
 
     public Rect rect = new Rect(0,0, 32, 32);
 
+
+    protected Vector3 _savedPos;
+
+    //-----------------------------
+
     protected virtual void Awake()
     {
         pos = transform.position;
+        if (spriteSheet)
+            RecreateSprite();
+    }
+
+    protected void OnEnable()
+    {
+        _allSprite.Add(this);
+    }
+
+    protected void OnDisable()
+    {
+        MaterialDatabase.Unload(spriteSheet);
+        _allSprite.Remove(this);
     }
 
 	// Use this for initialization
     [ContextMenu("Do Start")]
 	protected virtual void Start () 
 	{
-        if(spriteSheet)
-            RecreateSprite();
+        
 	}
 
 
     protected void OnDestroy()
     {
-        MaterialDatabase.Unload(spriteSheet);
+       
     }
 
-    protected virtual void Update()
+    protected void LateUpdate()
     {
         //RoundPosition();
     }
 
     public void RoundPosition()
     {
-        transform.position = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), transform.position.z);
+        //transform.position = new Vector3(Mathf.Round(pos.x), Mathf.Round(pos.y), transform.position.z);
+    }
+
+    //=========================
+
+    public void SaveRoundPos()
+    {
+        _savedPos = transform.position;
+        transform.position = new Vector3(Mathf.Round(_savedPos.x), Mathf.Round(_savedPos.y), transform.position.z);
+    }
+
+    public void RestoreSavedPos()
+    {
+        transform.position = _savedPos;
+    }
+
+    public void setSpriteByID(int ID)
+    {
+        int nbByLine = spriteSheet.width / (int)rect.width;
+
+        int col = ID / nbByLine;
+        int x = ID - col * nbByLine;
+
+        rect.x = x * rect.width;
+        rect.y = col * rect.height;
+
+        RecreateSprite();
     }
 
     //=========================
@@ -90,7 +137,11 @@ public class Sprite : MonoBehaviour
             mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);
         }
 
-        if (mr.sharedMaterial.mainTexture != spriteSheet)
+        if (!mr.sharedMaterial)
+        {
+            mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);
+        }
+        else if (mr.sharedMaterial.mainTexture != spriteSheet)
         {
             MaterialDatabase.Unload(mr.sharedMaterial.mainTexture as Texture2D);
             mr.sharedMaterial = MaterialDatabase.Get(spriteSheet);

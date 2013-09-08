@@ -1,0 +1,21 @@
+																							CABANE	C
+																							OBJET REPERE	OR
+																							OBJET AMELIO	OA
+																							REPERE	R
+										OA		R											CHEMIN	
+									C	C	C												ROCHER	ROC
+									C	C	C												ARBRE	TREE
+									C	C	C												OR ARBRE	ORA
+									C	C	C												OR ROCHER	ORR
+									ROC	P	ROC												REPERE ARBRE	RA
+										R		R		R									REPERE ROCHER	RR
+																							Flamant Rose	FLA
+					OR					R													Soutif	BRA
+										OR				ORA									Ventilo	VEN
+																								
+																								
+																								
+																								
+																								
+																								
+												RA	TREE	OA										
