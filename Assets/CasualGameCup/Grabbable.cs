@@ -44,6 +44,8 @@ public class Grabbable : MonoBehaviour
     {
         GameObject grabbable = null;
 
+        Debug.Log("created of type : " + type.ToString());
+
         switch (type)
         {
             case GrabbableType.NORMALBASE:

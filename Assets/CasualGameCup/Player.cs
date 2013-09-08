@@ -496,6 +496,7 @@ public class Player : MonoBehaviour
             case Grabbable.GrabbableType.VENTILO:
                 VentiloFound = true;
                 VentiloGO.SetActive(true);
+                SoutifGO.transform.parent.animation.Play("brashake");
                 break;
             default:
                 break;

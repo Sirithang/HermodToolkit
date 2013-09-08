@@ -34,6 +34,7 @@ public class PixelLine : MonoBehaviour
         List<int> id = new List<int>();
 
         Vector3 previous = points[0];
+        Vector3 prevToAdd;
 
         for (int i = 1; i < points.Count; ++i)
         {
@@ -79,6 +80,7 @@ public class PixelLine : MonoBehaviour
             id.Add(i * 2);
 
             previous = points[i];
+            prevToAdd = toAdd;
         }
 
         MeshFilter mf = GetComponent<MeshFilter>();
